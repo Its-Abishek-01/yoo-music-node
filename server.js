@@ -36,7 +36,7 @@ const upload = multer({
 
 // Routes
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.js'));
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 app.get('/music', (req, res) => {
