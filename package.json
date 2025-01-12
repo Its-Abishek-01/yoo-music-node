@@ -1,7 +1,7 @@
 {
   "name": "music-server",
   "version": "1.0.0",
-  "description": "A simple music streaming and upload server",
+  "description": "A simple music streaming and upload server with audio format conversion",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
@@ -9,6 +9,11 @@
   "dependencies": {
     "cors": "^2.8.5",
     "express": "^4.21.2",
-    "multer": "^1.4.5-lts.1"
+    "multer": "^1.4.5-lts.1",
+    "fluent-ffmpeg": "^2.1.2"
+  },
+  "devDependencies": {},
+  "engines": {
+    "node": ">=14.0.0"
   }
 }
