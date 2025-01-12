@@ -4,6 +4,7 @@ const path = require('path');
 const fs = require('fs');
 const cors = require('cors');
 const multer = require('multer');
+const axios = require('axios');
 const ffmpeg = require('fluent-ffmpeg');
 
 const app = express();
@@ -111,6 +112,14 @@ app.get('/download/:filename', (req, res) => {
 app.use((req, res) => {
     res.status(404).json({ message: 'Route not found' });
 });
+
+// Ping the server every 2 minutes to keep it alive
+setInterval(() => {
+    axios.get(`http://localhost:${port}`)
+        .then(() => console.log('Self-ping successful'))
+        .catch((err) => console.error('Error in self-ping:', err.message));
+}, 120000); // 2 minutes
+
 
 // Start server
 app.listen(port, () => {
