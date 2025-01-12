@@ -1,8 +1,10 @@
+// Server Code
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
 const cors = require('cors');
 const multer = require('multer');
+const ffmpeg = require('fluent-ffmpeg');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -18,18 +20,21 @@ if (!fs.existsSync(musicFolder)) {
     fs.mkdirSync(musicFolder);
 }
 
+const allowedMimeTypes = ['audio/mpeg', 'audio/wav', 'audio/flac', 'audio/aac', 'audio/ogg'];
+
 // Multer setup for file uploads
 const storage = multer.diskStorage({
     destination: (req, file, cb) => cb(null, musicFolder),
     filename: (req, file, cb) => cb(null, Date.now() + path.extname(file.originalname)),
 });
+
 const upload = multer({
     storage,
     fileFilter: (req, file, cb) => {
-        if (file.mimetype === 'audio/mpeg') {
+        if (allowedMimeTypes.includes(file.mimetype)) {
             cb(null, true);
         } else {
-            cb(new Error('Only .mp3 files are allowed!'), false);
+            cb(new Error('Unsupported file type! Supported formats: MP3, WAV, FLAC, AAC, OGG.'), false);
         }
     },
 });
@@ -72,7 +77,24 @@ app.post('/upload', upload.single('file'), (req, res) => {
     if (!req.file) {
         return res.status(400).json({ message: 'No file uploaded' });
     }
-    res.status(200).json({ message: 'File uploaded successfully', filename: req.file.filename });
+
+    const inputFilePath = path.join(musicFolder, req.file.filename);
+    const outputFilePath = inputFilePath.replace(path.extname(req.file.filename), '.mp3');
+
+    if (req.file.mimetype !== 'audio/mpeg') {
+        ffmpeg(inputFilePath)
+            .toFormat('mp3')
+            .save(outputFilePath)
+            .on('end', () => {
+                fs.unlinkSync(inputFilePath); // Delete the original file
+                res.status(200).json({ message: 'File uploaded and converted to MP3 successfully', filename: path.basename(outputFilePath) });
+            })
+            .on('error', (err) => {
+                res.status(500).json({ message: 'Error during file conversion', error: err.message });
+            });
+    } else {
+        res.status(200).json({ message: 'File uploaded successfully', filename: req.file.filename });
+    }
 });
 
 app.get('/download/:filename', (req, res) => {
