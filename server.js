@@ -114,11 +114,24 @@ app.use((req, res) => {
 });
 
 // Ping the server every 2 minutes to keep it alive
-setInterval(() => {
-    axios.get(`http://localhost:${port}`)
-        .then(() => console.log('Self-ping successful'))
-        .catch((err) => console.error('Error in self-ping:', err.message));
-}, 120000); // 2 minutes
+// Function to ping the server at random intervals (max 3 minutes)
+const pingServer = () => {
+    const interval = Math.floor(Math.random() * 180000) + 1; // Random interval between 1ms and 3 minutes
+    console.log(`Next ping in ${Math.round(interval / 1000)} seconds`);
+    setTimeout(async () => {
+        try {
+            await axios.get(`http://localhost:${port}`);
+            console.log('Self-ping successful');
+        } catch (err) {
+            console.error('Error in self-ping:', err.message);
+        }
+        pingServer(); // Schedule the next ping
+    }, interval);
+};
+
+// Start the random ping loop
+pingServer();
+
 
 
 // Start server
